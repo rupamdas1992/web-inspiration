@@ -22,3 +22,14 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# local workspace caches
+.claude/
+
+# scratch/temp files
+out*.txt
+test*.js
+test_drive*.js
+
+# build-time generated database
+public/inspiration-data.json
