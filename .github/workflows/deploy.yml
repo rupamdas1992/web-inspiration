@@ -1,0 +1,47 @@
+name: Sync & Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  schedule:
+    - cron: '0 */12 * * *' # Runs every 12 hours
+  workflow_dispatch: # Allows manual trigger from the GitHub Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    concurrency: ci-${{ github.ref }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ⚙️
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies 🔧
+        run: npm ci || npm install
+
+      - name: Fetch Google Drive Data 🗄️
+        env:
+          DRIVE_API_KEY: ${{ secrets.DRIVE_API_KEY }}
+        run: node scripts/sync-drive.js
+
+      - name: Build Application 🏗️
+        env:
+          PUBLIC_URL: '.' # Generates relative paths so it works on subdirectories (e.g. username.github.io/repo)
+        run: npm run build
+
+      - name: Deploy to GitHub Pages 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build # The folder the action should deploy.
+          branch: gh-pages # The branch the action should deploy to.
