@@ -77,12 +77,9 @@ async function run() {
         
         files.forEach(file => {
           const sizeInMB = file.size ? (parseInt(file.size) / (1024 * 1024)).toFixed(1) : '0.0';
-          const thumbUrl = file.thumbnailLink 
-            ? file.thumbnailLink.replace(/=s\d+.*$/, '=w800') 
-            : `https://drive.google.com/thumbnail?id=${file.id}&sz=w800`;
-          const imageUrl = file.thumbnailLink 
-            ? file.thumbnailLink.replace(/=s\d+.*$/, '=w1600') 
-            : `https://drive.google.com/thumbnail?id=${file.id}&sz=w1600`;
+          // Always use permanent, non-expiring Google Drive endpoints
+          const thumbUrl = `https://drive.google.com/thumbnail?id=${file.id}&sz=w800`;
+          const imageUrl = `https://lh3.googleusercontent.com/u/0/d/${file.id}`;
 
           items.push({
             id: file.id,
