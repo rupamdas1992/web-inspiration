@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Configuration
-const API_KEY = "AIzaSyATzRsoLIFQQ1JBPfYWNEvgwdapkW4RWN4"; // Google Drive Key (read-only)
+const API_KEY = process.env.DRIVE_API_KEY || process.env.PERSONAL_API_KEY || "";
 const ROOT_FOLDER_ID = "1l5AcNyxB9caGYiHMAuoI3AiBpltnis5T";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
