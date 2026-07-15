@@ -12,6 +12,8 @@ import {
   Eye,
   Loader2,
   Folder,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./components/ui/dialog"
@@ -19,8 +21,7 @@ import { ScrollArea } from "./components/ui/scroll-area"
 import { Skeleton } from "./components/ui/skeleton"
 import imageTitles from "./data/image-titles.json";
 
-// --- CONFIGURATION ---
-const PERSONAL_API_KEY = "AIzaSyATzRsoLIFQQ1JBPfYWNEvgwdapkW4RWN4";
+const PERSONAL_API_KEY = process.env.REACT_APP_PERSONAL_API_KEY || "";
 const ROOT_FOLDER_ID = "1l5AcNyxB9caGYiHMAuoI3AiBpltnis5T";
 
 export interface InspirationItem {
@@ -82,6 +83,9 @@ function App() {
   // Static pre-built data state
   const [allStaticItems, setAllStaticItems] = useState<InspirationItem[] | null>(null);
   const [displayLimit, setDisplayLimit] = useState(24);
+  const [selectedItem, setSelectedItem] = useState<InspirationItem | null>(null);
+
+
 
   // Reset pagination limit on search or collection changes
   useEffect(() => {
@@ -227,6 +231,40 @@ function App() {
       return matchesSearch && matchesSection;
     });
   }, [items, allStaticItems, searchQuery, selectedSection]);
+
+  const currentIndex = useMemo(() => {
+    if (!selectedItem) return -1;
+    return filteredItems.findIndex(x => x.id === selectedItem.id);
+  }, [filteredItems, selectedItem]);
+
+  const hasPrev = currentIndex > 0;
+  const hasNext = currentIndex < filteredItems.length - 1;
+
+  const handlePrev = useCallback(() => {
+    if (currentIndex > 0) {
+      setSelectedItem(filteredItems[currentIndex - 1]);
+    }
+  }, [currentIndex, filteredItems]);
+
+  const handleNext = useCallback(() => {
+    if (currentIndex < filteredItems.length - 1 && currentIndex !== -1) {
+      setSelectedItem(filteredItems[currentIndex + 1]);
+    }
+  }, [currentIndex, filteredItems]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedItem) return;
+      if (e.key === 'ArrowLeft') {
+        handlePrev();
+      } else if (e.key === 'ArrowRight') {
+        handleNext();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedItem, handlePrev, handleNext]);
 
   const displayedItems = useMemo(() => {
     return allStaticItems ? filteredItems.slice(0, displayLimit) : filteredItems;
@@ -498,7 +536,14 @@ function App() {
               <div className="inspiration-grid" style={{ gap: px(2) }}>
                 {displayedItems.map((item, index) => {
                   const isLast = displayedItems.length === index + 1;
-                  return <InspirationCard key={item.id} item={item} ref={isLast ? lastItemRef : null} />;
+                  return (
+                    <InspirationCard
+                      key={item.id}
+                      item={item}
+                      ref={isLast ? lastItemRef : null}
+                      onClick={() => setSelectedItem(item)}
+                    />
+                  );
                 })}
               </div>
 
@@ -521,104 +566,133 @@ function App() {
           </div>
         </main>
       </div>
+
+      {/* Lightbox Modal (Node ID: BCvqL -> Modal Container: sO9Fq) */}
+      <Dialog open={selectedItem !== null} onOpenChange={(open) => !open && setSelectedItem(null)}>
+        {selectedItem && (
+          <DialogContent className="max-w-[1100px] w-[95vw] h-[85vh] p-0 border-none rounded-2xl shadow-2xl overflow-y-auto flex flex-col gap-0 bg-white">
+            <DialogHeader className="sr-only">
+              <DialogTitle>{selectedItem.title}</DialogTitle>
+            </DialogHeader>
+
+            {/* Top: Image Preview */}
+            <div className="shrink-0 flex items-center justify-center relative p-8" style={{ height: '55vh', minHeight: '300px', backgroundColor: 'var(--color-surface-main)' }}>
+              {/* Left Navigation Arrow */}
+              {hasPrev && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePrev();
+                  }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 hover:bg-white shadow-md border flex items-center justify-center transition-all cursor-pointer z-10 hover:scale-105 active:scale-95"
+                  style={{ borderColor: 'var(--color-border)', outline: 'none' }}
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="w-5 h-5" style={{ color: 'var(--color-fg-primary)' }} />
+                </button>
+              )}
+
+              {/* Right Navigation Arrow */}
+              {hasNext && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNext();
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 hover:bg-white shadow-md border flex items-center justify-center transition-all cursor-pointer z-10 hover:scale-105 active:scale-95"
+                  style={{ borderColor: 'var(--color-border)', outline: 'none' }}
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="w-5 h-5" style={{ color: 'var(--color-fg-primary)' }} />
+                </button>
+              )}
+
+              <img
+                src={selectedItem.imageUrl}
+                alt={selectedItem.title}
+                className="w-full h-full object-contain drop-shadow-xl"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (!target.src.includes('/u/0/d/')) {
+                    target.src = `https://lh3.googleusercontent.com/u/0/d/${selectedItem.id}`;
+                  }
+                }}
+              />
+            </div>
+
+            {/* Bottom: Details Panel */}
+            <div className="shrink-0 flex flex-col" style={{ width: '100%', padding: `${px(2)} ${px(3)} ${px(3)} ${px(3)}`, backgroundColor: 'var(--color-surface-primary)', gap: px(3) }}>
+              <h2 className="font-semibold leading-snug break-words" style={{ fontFamily: 'Funnel Sans, system-ui, sans-serif', fontSize: TEXT.title2, color: 'var(--color-fg-primary)' }}>{selectedItem.title}</h2>
+
+              <div style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'space-between', gap: '16px' }}>
+                {/* Column 1: Category & Dimensions */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span className="font-semibold uppercase tracking-widest" style={{ fontSize: TEXT.xs, color: 'var(--color-fg-tertiary)' }}>Category</span>
+                    <span className="font-medium tabular-nums" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{selectedItem.section}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span className="font-semibold uppercase tracking-widest" style={{ fontSize: TEXT.xs, color: 'var(--color-fg-tertiary)' }}>Dimensions</span>
+                    <span className="font-medium tabular-nums" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{selectedItem.dimensions}</span>
+                  </div>
+                </div>
+
+                {/* Column 2: Size & Added */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span className="font-semibold uppercase tracking-widest" style={{ fontSize: TEXT.xs, color: 'var(--color-fg-tertiary)' }}>Size</span>
+                    <span className="font-medium tabular-nums" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{selectedItem.size}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span className="font-semibold uppercase tracking-widest" style={{ fontSize: TEXT.xs, color: 'var(--color-fg-tertiary)' }}>Added</span>
+                    <span className="font-medium tabular-nums" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{selectedItem.date}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   );
 }
 
-// Component/Thumbnail Card (Node ID: H3GS5) & Lightbox Modal (Node ID: BCvqL)
-const InspirationCard = React.forwardRef<HTMLDivElement, { item: InspirationItem }>(({ item }, ref) => {
+// Component/Thumbnail Card (Node ID: H3GS5)
+const InspirationCard = React.forwardRef<HTMLDivElement, { item: InspirationItem; onClick?: () => void }>(({ item, onClick }, ref) => {
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <div
-          ref={ref}
-          className="group flex flex-col w-full bg-white rounded-xl overflow-hidden cursor-pointer border transition-all duration-200"
-          style={{ borderColor: 'var(--color-border)' }}
-        >
-          <div className="relative overflow-hidden" style={{ paddingTop: '62.5%', backgroundColor: 'var(--color-surface-main)' }}>
-            <img
-              src={item.thumbnailUrl}
-              alt={item.title}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-              referrerPolicy="no-referrer"
-              loading="lazy"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                if (!target.src.includes('/u/0/d/')) {
-                  target.src = `https://lh3.googleusercontent.com/u/0/d/${item.id}`;
-                }
-              }}
-            />
-            <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-              <Eye className="w-6 h-6 text-white drop-shadow-md" />
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', padding: px(2), gap: 4 }}>
-            <h3 className="truncate font-medium" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{item.title}</h3>
-            <div className="flex items-center justify-between">
-              <span className="font-semibold" style={{ fontSize: TEXT.xs, color: BRAND }}>{item.section}</span>
-            </div>
-          </div>
+    <div
+      ref={ref}
+      onClick={onClick}
+      className="group flex flex-col w-full bg-white rounded-xl overflow-hidden cursor-pointer border transition-all duration-200"
+      style={{ borderColor: 'var(--color-border)' }}
+    >
+      <div className="relative overflow-hidden" style={{ paddingTop: '62.5%', backgroundColor: 'var(--color-surface-main)' }}>
+        <img
+          src={item.thumbnailUrl}
+          alt={item.title}
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          referrerPolicy="no-referrer"
+          loading="lazy"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            if (!target.src.includes('/u/0/d/')) {
+              target.src = `https://lh3.googleusercontent.com/u/0/d/${item.id}`;
+            }
+          }}
+        />
+        <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+          <Eye className="w-6 h-6 text-white drop-shadow-md" />
         </div>
-      </DialogTrigger>
-      
-      {/* Lightbox Modal (Node ID: BCvqL -> Modal Container: sO9Fq) */}
-      <DialogContent className="max-w-[1100px] w-[95vw] h-[85vh] p-0 border-none rounded-2xl shadow-2xl overflow-y-auto flex flex-col gap-0 bg-white">
-        <DialogHeader className="sr-only">
-          <DialogTitle>{item.title}</DialogTitle>
-        </DialogHeader>
+      </div>
 
-        {/* Top: Image Preview */}
-        <div className="shrink-0 flex items-center justify-center relative p-8" style={{ height: '55vh', minHeight: '300px', backgroundColor: 'var(--color-surface-main)' }}>
-          <img
-            src={item.imageUrl}
-            alt={item.title}
-            className="w-full h-full object-contain drop-shadow-xl"
-            referrerPolicy="no-referrer"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              if (!target.src.includes('/u/0/d/')) {
-                target.src = `https://lh3.googleusercontent.com/u/0/d/${item.id}`;
-              }
-            }}
-          />
+      <div style={{ display: 'flex', flexDirection: 'column', padding: px(2), gap: 4 }}>
+        <h3 className="truncate font-medium" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{item.title}</h3>
+        <div className="flex items-center justify-between">
+          <span className="font-semibold" style={{ fontSize: TEXT.xs, color: BRAND }}>{item.section}</span>
         </div>
-
-        {/* Bottom: Details Panel */}
-        <div className="shrink-0 flex flex-col" style={{ width: '100%', padding: `${px(2)} ${px(3)} ${px(3)} ${px(3)}`, backgroundColor: 'var(--color-surface-primary)', gap: px(3) }}>
-          <h2 className="font-semibold leading-snug break-words" style={{ fontFamily: 'Funnel Sans, system-ui, sans-serif', fontSize: TEXT.title2, color: 'var(--color-fg-primary)' }}>{item.title}</h2>
-
-          <div style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'space-between', gap: '16px' }}>
-            {/* Column 1: Category & Dimensions */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span className="font-semibold uppercase tracking-widest" style={{ fontSize: TEXT.xs, color: 'var(--color-fg-tertiary)' }}>Category</span>
-                <span className="font-medium tabular-nums" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{item.section}</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span className="font-semibold uppercase tracking-widest" style={{ fontSize: TEXT.xs, color: 'var(--color-fg-tertiary)' }}>Dimensions</span>
-                <span className="font-medium tabular-nums" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{item.dimensions}</span>
-              </div>
-            </div>
-
-            {/* Column 2: Size & Added */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span className="font-semibold uppercase tracking-widest" style={{ fontSize: TEXT.xs, color: 'var(--color-fg-tertiary)' }}>Size</span>
-                <span className="font-medium tabular-nums" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{item.size}</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span className="font-semibold uppercase tracking-widest" style={{ fontSize: TEXT.xs, color: 'var(--color-fg-tertiary)' }}>Added</span>
-                <span className="font-medium tabular-nums" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{item.date}</span>
-              </div>
-            </div>
-          </div>
-
-
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 });
 
