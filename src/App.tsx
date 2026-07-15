@@ -227,7 +227,8 @@ function App() {
     };
     
     loadStaticData();
-  }, [fetchDriveData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filteredItems = useMemo(() => {
     const sourceItems = allStaticItems || items;
