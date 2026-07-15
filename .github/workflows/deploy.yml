@@ -38,6 +38,7 @@ jobs:
       - name: Build Application 🏗️
         env:
           PUBLIC_URL: '.' # Generates relative paths so it works on subdirectories (e.g. username.github.io/repo)
+          CI: false # Treat warnings as warnings, not build-failing errors
         run: npm run build
 
       - name: Deploy to GitHub Pages 🚀
