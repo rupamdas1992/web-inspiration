@@ -339,7 +339,7 @@ function App() {
         <div className="flex-1 max-w-2xl px-2 sm:px-8 min-w-0">
           <div
             className="flex items-center w-full rounded-full transition-all"
-            style={{ height: TOUCH_H, backgroundColor: 'var(--color-surface-main)', border: '1px solid var(--color-border)', padding: `0 ${px(2)}`, gap: px(1) }}
+            style={{ height: TOUCH_H, border: '1px solid var(--color-border)', padding: `0 ${px(2)}`, gap: px(1) }}
             onFocusCapture={e => (e.currentTarget.style.borderColor = 'var(--color-border-input)')}
             onBlurCapture={e => (e.currentTarget.style.borderColor = 'var(--color-border)')}
           >
