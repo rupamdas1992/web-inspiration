@@ -483,7 +483,7 @@ function App() {
               {loading && filteredItems.length === 0 && (
                 <div className="inspiration-grid" style={{ gap: px(2) }}>
                   {Array.from({ length: 16 }).map((_, i) => (
-                    <div key={i} className="bg-white rounded-xl overflow-hidden border" style={{ borderColor: 'var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,.05), 0 1px 2px rgba(0,0,0,.04)' }}>
+                    <div key={i} className="bg-white rounded-xl overflow-hidden border" style={{ borderColor: 'var(--color-border)' }}>
                       <Skeleton className="w-full aspect-video" />
                       <div style={{ padding: px(2), display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <Skeleton className="h-4 w-3/4 rounded" />
@@ -533,7 +533,7 @@ const InspirationCard = React.forwardRef<HTMLDivElement, { item: InspirationItem
         <div
           ref={ref}
           className="group flex flex-col w-full bg-white rounded-xl overflow-hidden cursor-pointer border transition-all duration-200"
-          style={{ borderColor: 'var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,.05), 0 1px 2px rgba(0,0,0,.04)' }}
+          style={{ borderColor: 'var(--color-border)' }}
         >
           <div className="relative overflow-hidden" style={{ paddingTop: '62.5%', backgroundColor: 'var(--color-surface-main)' }}>
             <img
@@ -544,7 +544,7 @@ const InspirationCard = React.forwardRef<HTMLDivElement, { item: InspirationItem
               loading="lazy"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
-                if (target.src.includes('drive.google.com/thumbnail')) {
+                if (!target.src.includes('/u/0/d/')) {
                   target.src = `https://lh3.googleusercontent.com/u/0/d/${item.id}`;
                 }
               }}
@@ -578,7 +578,7 @@ const InspirationCard = React.forwardRef<HTMLDivElement, { item: InspirationItem
             referrerPolicy="no-referrer"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              if (target.src.includes('drive.google.com/thumbnail')) {
+              if (!target.src.includes('/u/0/d/')) {
                 target.src = `https://lh3.googleusercontent.com/u/0/d/${item.id}`;
               }
             }}
