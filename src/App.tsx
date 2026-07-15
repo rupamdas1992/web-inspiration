@@ -84,6 +84,13 @@ function App() {
   const [allStaticItems, setAllStaticItems] = useState<InspirationItem[] | null>(null);
   const [displayLimit, setDisplayLimit] = useState(24);
   const [selectedItem, setSelectedItem] = useState<InspirationItem | null>(null);
+  const [imageLoading, setImageLoading] = useState(true);
+
+  useEffect(() => {
+    if (selectedItem) {
+      setImageLoading(true);
+    }
+  }, [selectedItem]);
 
 
 
@@ -570,7 +577,7 @@ function App() {
       {/* Lightbox Modal (Node ID: BCvqL -> Modal Container: sO9Fq) */}
       <Dialog open={selectedItem !== null} onOpenChange={(open) => !open && setSelectedItem(null)}>
         {selectedItem && (
-          <DialogContent className="max-w-[1100px] w-[95vw] h-[85vh] p-0 border-none rounded-2xl shadow-2xl overflow-y-auto flex flex-col gap-0 bg-white">
+          <DialogContent className="max-w-[1100px] w-[95vw] h-[85vh] p-0 border-none rounded-2xl overflow-y-auto flex flex-col gap-0 bg-white">
             <DialogHeader className="sr-only">
               <DialogTitle>{selectedItem.title}</DialogTitle>
             </DialogHeader>
@@ -584,7 +591,7 @@ function App() {
                     e.stopPropagation();
                     handlePrev();
                   }}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 hover:bg-white shadow-md border flex items-center justify-center transition-all cursor-pointer z-10 hover:scale-105 active:scale-95"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 hover:bg-white border flex items-center justify-center transition-all cursor-pointer z-10"
                   style={{ borderColor: 'var(--color-border)', outline: 'none' }}
                   aria-label="Previous image"
                 >
@@ -599,7 +606,7 @@ function App() {
                     e.stopPropagation();
                     handleNext();
                   }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 hover:bg-white shadow-md border flex items-center justify-center transition-all cursor-pointer z-10 hover:scale-105 active:scale-95"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 hover:bg-white border flex items-center justify-center transition-all cursor-pointer z-10"
                   style={{ borderColor: 'var(--color-border)', outline: 'none' }}
                   aria-label="Next image"
                 >
@@ -607,15 +614,21 @@ function App() {
                 </button>
               )}
 
+              {imageLoading && (
+                <Skeleton className="w-full h-full rounded-xl" />
+              )}
               <img
                 src={selectedItem.imageUrl}
                 alt={selectedItem.title}
-                className="w-full h-full object-contain drop-shadow-xl"
+                className={`w-full h-full object-contain drop-shadow-xl ${imageLoading ? 'opacity-0 absolute' : 'opacity-100'}`}
                 referrerPolicy="no-referrer"
+                onLoad={() => setImageLoading(false)}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   if (!target.src.includes('/u/0/d/')) {
                     target.src = `https://lh3.googleusercontent.com/u/0/d/${selectedItem.id}`;
+                  } else {
+                    setImageLoading(false);
                   }
                 }}
               />
@@ -623,30 +636,66 @@ function App() {
 
             {/* Bottom: Details Panel */}
             <div className="shrink-0 flex flex-col" style={{ width: '100%', padding: `${px(2)} ${px(3)} ${px(3)} ${px(3)}`, backgroundColor: 'var(--color-surface-primary)', gap: px(3) }}>
-              <h2 className="font-semibold leading-snug break-words" style={{ fontFamily: 'Funnel Sans, system-ui, sans-serif', fontSize: TEXT.title2, color: 'var(--color-fg-primary)' }}>{selectedItem.title}</h2>
+              {imageLoading ? (
+                <Skeleton className="h-6 w-48 rounded" />
+              ) : (
+                <h2 className="font-semibold leading-snug break-words" style={{ fontFamily: 'Funnel Sans, system-ui, sans-serif', fontSize: TEXT.title2, color: 'var(--color-fg-primary)' }}>{selectedItem.title}</h2>
+              )}
 
               <div style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'space-between', gap: '16px' }}>
                 {/* Column 1: Category & Dimensions */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span className="font-semibold uppercase tracking-widest" style={{ fontSize: TEXT.xs, color: 'var(--color-fg-tertiary)' }}>Category</span>
-                    <span className="font-medium tabular-nums" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{selectedItem.section}</span>
+                    {imageLoading ? (
+                      <Skeleton className="h-3 w-16 rounded mb-1" />
+                    ) : (
+                      <span className="font-semibold uppercase tracking-widest" style={{ fontSize: TEXT.xs, color: 'var(--color-fg-tertiary)' }}>Category</span>
+                    )}
+                    {imageLoading ? (
+                      <Skeleton className="h-4 w-32 rounded" />
+                    ) : (
+                      <span className="font-medium tabular-nums" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{selectedItem.section}</span>
+                    )}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span className="font-semibold uppercase tracking-widest" style={{ fontSize: TEXT.xs, color: 'var(--color-fg-tertiary)' }}>Dimensions</span>
-                    <span className="font-medium tabular-nums" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{selectedItem.dimensions}</span>
+                    {imageLoading ? (
+                      <Skeleton className="h-3 w-20 rounded mb-1" />
+                    ) : (
+                      <span className="font-semibold uppercase tracking-widest" style={{ fontSize: TEXT.xs, color: 'var(--color-fg-tertiary)' }}>Dimensions</span>
+                    )}
+                    {imageLoading ? (
+                      <Skeleton className="h-4 w-24 rounded" />
+                    ) : (
+                      <span className="font-medium tabular-nums" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{selectedItem.dimensions}</span>
+                    )}
                   </div>
                 </div>
 
                 {/* Column 2: Size & Added */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span className="font-semibold uppercase tracking-widest" style={{ fontSize: TEXT.xs, color: 'var(--color-fg-tertiary)' }}>Size</span>
-                    <span className="font-medium tabular-nums" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{selectedItem.size}</span>
+                    {imageLoading ? (
+                      <Skeleton className="h-3 w-10 rounded mb-1" />
+                    ) : (
+                      <span className="font-semibold uppercase tracking-widest" style={{ fontSize: TEXT.xs, color: 'var(--color-fg-tertiary)' }}>Size</span>
+                    )}
+                    {imageLoading ? (
+                      <Skeleton className="h-4 w-16 rounded" />
+                    ) : (
+                      <span className="font-medium tabular-nums" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{selectedItem.size}</span>
+                    )}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span className="font-semibold uppercase tracking-widest" style={{ fontSize: TEXT.xs, color: 'var(--color-fg-tertiary)' }}>Added</span>
-                    <span className="font-medium tabular-nums" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{selectedItem.date}</span>
+                    {imageLoading ? (
+                      <Skeleton className="h-3 w-12 rounded mb-1" />
+                    ) : (
+                      <span className="font-semibold uppercase tracking-widest" style={{ fontSize: TEXT.xs, color: 'var(--color-fg-tertiary)' }}>Added</span>
+                    )}
+                    {imageLoading ? (
+                      <Skeleton className="h-4 w-28 rounded" />
+                    ) : (
+                      <span className="font-medium tabular-nums" style={{ fontSize: TEXT.sm, color: 'var(--color-fg-primary)' }}>{selectedItem.date}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -671,7 +720,7 @@ const InspirationCard = React.forwardRef<HTMLDivElement, { item: InspirationItem
         <img
           src={item.thumbnailUrl}
           alt={item.title}
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          className="absolute inset-0 w-full h-full object-cover"
           referrerPolicy="no-referrer"
           loading="lazy"
           onError={(e) => {
