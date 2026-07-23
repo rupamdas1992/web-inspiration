@@ -2,6 +2,12 @@
 
 🌐 **Live Demo**: [https://rupamdas1992.github.io/web-inspiration/](https://rupamdas1992.github.io/web-inspiration/)
 
+<p align="center">
+  <a href="https://rupamdas1992.github.io/web-inspiration/">
+    <img src="docs/app-preview.png" alt="Imagenie App Preview" width="100%" />
+  </a>
+</p>
+
 Imagenie is a lightweight, responsive gallery dashboard built to organize, search, and preview web UI/UX screenshot design patterns. It dynamically syncs folders and assets from a shared Google Drive library into a clean, flat React interface.
 
 ---
